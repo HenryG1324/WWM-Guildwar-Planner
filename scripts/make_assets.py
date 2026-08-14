@@ -80,6 +80,12 @@ result_arr = np.array(result)
 # original colors and antialiasing remain exact.
 result_arr[353:370, 510:580, :] = arr[353:370, 590:591, :]
 result_arr[545:573, 766:837, :] = arr[545:573, 750:751, :]
+
+# The cleanup mask accidentally pulled red from the ring into the hollow center
+# of the lower-middle objective at (785, 634). This compact region has no player
+# marker in the source, so restore the complete circle from the authoritative
+# original rather than trying to synthesize its interior.
+result_arr[617:652, 768:803, :] = arr[617:652, 768:803, :]
 Image.fromarray(result_arr).save(A / "mapB3.png")
 
 # ---- tower sprite: cut the mid-lane blue tower figure, key out grey bg + green line ----
