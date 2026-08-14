@@ -1,0 +1,19 @@
+# Keep text blobs normalized and check them out consistently on every platform.
+* text=auto eol=lf
+
+# Windows command scripts require CRLF for maximum compatibility.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Never attempt text or line-ending conversion on binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary

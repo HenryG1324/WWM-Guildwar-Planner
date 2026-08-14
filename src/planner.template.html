@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>百业战 · 底图三方案对比</title>
+<style>
+  body{margin:0;background:#0d1117;color:#e6edf3;font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px;}
+  h2{margin:6px 0 2px;font-size:20px;}
+  .subtitle{color:#8b949e;font-size:13px;margin:0 0 10px;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center;}
+  button{background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer;}
+  button:hover{background:#30363d;}
+  button.primary{background:#238636;border-color:#2ea043;}
+  .basebtn.active{background:#1f6feb;border-color:#388bfd;color:#fff;font-weight:700;}
+  .sep{width:1px;height:22px;background:#30363d;margin:0 4px;}
+  #board{width:100%;height:auto;touch-action:none;user-select:none;border-radius:10px;background:#1b2027;}
+  .tok{cursor:grab;}
+  .status{color:#3fb950;font-size:13px;min-height:18px;margin-top:6px;}
+  .hint{color:#8b949e;font-size:12px;margin-top:8px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>百业战战术板 <span style="font-size:12px;color:#8b949e;background:#21262d;padding:2px 8px;border-radius:6px;">v1</span></h2>
+  <p class="subtitle">拖动棋子摆位推演攻防节奏；<b>单击棋子改人数</b>（默认 攻5 / 守3，可设任意数，如集中成一支 20 人大队）。棋子大小随人数变化。</p>
+
+  <div class="toolbar">
+    <button class="primary" onclick="exportJSON()">💾 导出布局(JSON)</button>
+    <button onclick="document.getElementById('impf').click()">📂 导入布局</button>
+    <input id="impf" type="file" accept="application/json" style="display:none" onchange="importJSON(event)"/>
+    <button onclick="downloadSVG()">⬇️ 下载SVG</button>
+    <button onclick="downloadPNG()">🖼️ 下载PNG</button>
+    <button onclick="resetLayout()">↺ 复位</button>
+  </div>
+  <div class="status" id="status">当前底图：B</div>
+
+  <svg id="board" viewBox="0 0 1450 1150" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+       font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+    <!-- ============ BASE C: original photo (dots visible) ============ -->
+    <g id="baseC">
+      <image class="photo" href="assets/map-clean.png" xlink:href="assets/map-clean.png" x="0" y="0" width="1450" height="1014"/>
+    </g>
+
+    <!-- ============ BASE B: cleaned photo + redrawn green line ============ -->
+    <g id="baseB" style="display:none">
+      <image class="photo" href="assets/mapB3.png" xlink:href="assets/mapB3.png" x="0" y="0" width="1450" height="1014"/>
+    </g>
+
+    <!-- ============ BASE A: full vector redraw ============ -->
+    <g id="baseA" style="display:none">
+      <rect x="0" y="0" width="1450" height="1014" fill="#c7ccd0"/>
+      <rect x="28" y="28" width="1394" height="958" rx="18" fill="none" stroke="#eef2f4" stroke-width="16"/>
+      <g fill="#e7ebee">
+        <rect x="60" y="60" width="70" height="70" rx="6"/><rect x="1320" y="60" width="70" height="70" rx="6"/>
+        <rect x="60" y="884" width="70" height="70" rx="6"/><rect x="1320" y="884" width="70" height="70" rx="6"/>
+      </g>
+      <!-- inner play area -->
+      <path d="M300,558 L430,370 L1020,370 L1150,558 L1020,746 L430,746 Z" fill="#d3d8db" stroke="#b7bec2" stroke-width="3"/>
+      <!-- lanes -->
+      <polyline points="330,470 455,372 1000,372 1120,470" fill="none" stroke="#e0403f" stroke-width="8" stroke-linejoin="round"/>
+      <line x1="340" y1="558" x2="1110" y2="558" stroke="#22b52a" stroke-width="8" stroke-linecap="round"/>
+      <polyline points="330,648 455,744 1005,744 1120,648" fill="none" stroke="#2b39d6" stroke-width="8" stroke-linejoin="round"/>
+      <!-- homes -->
+      <g>
+        <rect x="120" y="470" width="150" height="176" rx="12" fill="#0f2f1a" opacity="0.15"/>
+        <text x="195" y="548" font-size="46" text-anchor="middle">🪿</text>
+        <text x="195" y="600" font-size="18" fill="#1a7f37" text-anchor="middle" font-weight="700">我方家</text>
+        <rect x="1180" y="470" width="150" height="176" rx="12" fill="#3a1416" opacity="0.15"/>
+        <text x="1255" y="548" font-size="46" text-anchor="middle">🪿</text>
+        <text x="1255" y="600" font-size="18" fill="#c9302c" text-anchor="middle" font-weight="700">敌方家</text>
+      </g>
+      <!-- towers (人墙): ours blue, enemy red, on each lane -->
+      <g font-size="16" font-weight="800" text-anchor="middle" fill="#fff" style="paint-order:stroke;stroke:#0b0f14;stroke-width:3px;">
+        <g><rect x="524" y="346" width="34" height="34" rx="5" fill="#1f6feb"/><text x="541" y="369">墙</text></g>
+        <g><rect x="828" y="346" width="34" height="34" rx="5" fill="#e0403f"/><text x="845" y="369">墙</text></g>
+        <g><rect x="524" y="541" width="34" height="34" rx="5" fill="#1f6feb"/><text x="541" y="564">墙</text></g>
+        <g><rect x="828" y="541" width="34" height="34" rx="5" fill="#e0403f"/><text x="845" y="564">墙</text></g>
+        <g><rect x="524" y="728" width="34" height="34" rx="5" fill="#1f6feb"/><text x="541" y="751">墙</text></g>
+        <g><rect x="828" y="728" width="34" height="34" rx="5" fill="#e0403f"/><text x="845" y="751">墙</text></g>
+      </g>
+      <!-- 野怪 -->
+      <g fill="none" stroke="#e0403f" stroke-width="4">
+        <circle cx="505" cy="487" r="15"/><circle cx="640" cy="487" r="15"/><circle cx="800" cy="432" r="15"/><circle cx="905" cy="486" r="15"/>
+        <circle cx="505" cy="632" r="15"/><circle cx="640" cy="690" r="15"/><circle cx="800" cy="636" r="15"/><circle cx="905" cy="628" r="15"/>
+      </g>
+      <!-- objective circles -->
+      <g fill="none" stroke-width="6">
+        <circle cx="828" cy="150" r="40" stroke="#8957e5"/><circle cx="588" cy="953" r="40" stroke="#8957e5"/>
+        <circle cx="585" cy="148" r="40" stroke="#161b22"/><circle cx="828" cy="958" r="40" stroke="#161b22"/>
+      </g>
+      <g id="labelsA" font-weight="800" text-anchor="middle" style="paint-order:stroke;stroke:#f2f5f6;stroke-width:5px;stroke-linejoin:round;">
+        <text x="725" y="356" font-size="30" fill="#e0403f">上路</text>
+        <text x="725" y="540" font-size="30" fill="#1a9c1a">中路</text>
+        <text x="725" y="712" font-size="30" fill="#2b39d6">下路</text>
+      </g>
+      <g font-weight="800" text-anchor="middle" style="paint-order:stroke;stroke:#f2f5f6;stroke-width:4px;stroke-linejoin:round;">
+        <text x="828" y="150" font-size="24" fill="#6f42c1" dominant-baseline="central">据点</text>
+        <text x="588" y="953" font-size="24" fill="#6f42c1" dominant-baseline="central">据点</text>
+      </g>
+      <g font-weight="800" text-anchor="middle" fill="#161b22" font-size="18">
+        <text x="585" y="140" dominant-baseline="central">张豹</text><text x="585" y="164" dominant-baseline="central">朱骨</text>
+        <text x="828" y="950" dominant-baseline="central">张豹</text><text x="828" y="974" dominant-baseline="central">朱骨</text>
+      </g>
+    </g>
+
+    <!-- ============ shared labels for PHOTO bases (B & C) ============ -->
+    <g id="labelsPhoto" pointer-events="none" font-weight="800" text-anchor="middle"
+       style="paint-order:stroke;stroke:#0b0f14;stroke-width:5px;stroke-linejoin:round;">
+      <text x="725" y="356" font-size="34" fill="#ff4d4d">上路</text>
+      <text x="725" y="540" font-size="34" fill="#3ad83a">中路</text>
+      <text x="725" y="712" font-size="34" fill="#5a72ff">下路</text>
+      <text x="825" y="145" font-size="28" fill="#d6bbff" dominant-baseline="central">据点</text>
+      <text x="590" y="963" font-size="28" fill="#d6bbff" dominant-baseline="central">据点</text>
+      <text x="587" y="138" font-size="21" fill="#fff" dominant-baseline="central">张豹</text>
+      <text x="587" y="162" font-size="21" fill="#fff" dominant-baseline="central">朱骨</text>
+      <text x="826" y="952" font-size="21" fill="#fff" dominant-baseline="central">张豹</text>
+      <text x="826" y="976" font-size="21" fill="#fff" dominant-baseline="central">朱骨</text>
+      <!-- restored blue 上路 tower: real sprite lifted from the map (incl. feet) -->
+      <image id="towerfix" class="embed" href="assets/tower-blue-v4.png" xlink:href="assets/tower-blue-v4.png" x="525" y="325" width="30" height="47" style="stroke:none"/>
+    </g>
+
+    <!-- discard / casualty pile -->
+    <g id="discard" pointer-events="none">
+      <rect x="30" y="1046" width="1390" height="94" rx="12" fill="#161b22" stroke="#484f58" stroke-width="2" stroke-dasharray="10 8"/>
+      <text x="58" y="1088" fill="#adbac7" font-size="28" font-weight="800">弃置区</text>
+      <text x="200" y="1088" fill="#6e7681" font-size="19">阵亡 / 未上场的队伍拖到这里</text>
+    </g>
+
+    <!-- 总兵力 HUD (upper corners) -->
+    <g id="totalsHUD" pointer-events="none" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+      <rect x="40" y="34" width="230" height="56" rx="12" fill="#0d1117" opacity="0.66"/>
+      <text x="155" y="72" text-anchor="middle"><tspan fill="#c9d1d9" font-size="23">我方兵力 </tspan><tspan id="totWe" fill="#79c0ff" font-size="34" font-weight="800">29</tspan></text>
+      <rect x="1180" y="34" width="230" height="56" rx="12" fill="#0d1117" opacity="0.66"/>
+      <text x="1295" y="72" text-anchor="middle"><tspan fill="#c9d1d9" font-size="23">敌方兵力 </tspan><tspan id="totFoe" fill="#ff7b72" font-size="34" font-weight="800">29</tspan></text>
+      <text x="725" y="70" text-anchor="middle" fill="#8b949e" font-size="21" font-weight="600" style="paint-order:stroke;stroke:#f2f5f6;stroke-width:4px;stroke-linejoin:round;">单场每方最多 30 人</text>
+    </g>
+
+    <g id="tokens"></g>
+  </svg>
+
+  <div class="toolbar" style="margin-top:12px;">
+    <span style="color:#8b949e;font-size:12px;">底图：</span>
+    <button class="basebtn" data-b="A" onclick="setBase('A')">A 矢量重绘</button>
+    <button class="basebtn" data-b="B" onclick="setBase('B')">B 照片去点+叠加</button>
+    <button class="basebtn" data-b="C" onclick="setBase('C')">C 照片原图</button>
+    <span class="sep"></span>
+    <span style="color:#8b949e;font-size:12px;">加队：</span>
+    <button onclick="addPiece('we','atk')">＋我方攻</button>
+    <button onclick="addPiece('we','def')">＋我方守</button>
+    <button onclick="addPiece('foe','atk')">＋敌方攻</button>
+    <button onclick="addPiece('foe','def')">＋敌方守</button>
+  </div>
+  <p class="hint">
+    <b>拖动</b>棋子摆位 · <b>单击</b>棋子改人数（0 = 移除）· 「加队」按钮增援 · 不上场/阵亡拖到「弃置区」。<br/>
+    棋子大小随人数变化；数字=该队人数。圆=进攻队 · 方=防守队；蓝绿=我方 · 红橙=敌方；默认 攻5 / 守3。
+  </p>
+  <p class="hint">
+    <b>底图三选一</b>（用上方「底图」按钮切换，仅影响背景不影响棋子）：<br/>
+    <b>A 矢量重绘</b> — 纯手绘矢量地图，最干净、可无限缩放、无杂物，但为示意风格（无游戏真实贴图）。<br/>
+    <b>B 照片去点+叠加</b> — 游戏实拍图，去掉视频作者标注的绿/黄「玩家点」并补上清晰路名/据点标注，真实又整洁（<b>推荐</b>）。<br/>
+    <b>C 原始照片</b> — 未处理的原始截图，作者的绿/黄玩家点仍保留在图上。
+  </p>
+  <p style="text-align:center;color:#8b949e;font-size:14px;margin-top:16px;letter-spacing:0.5px;">本图制作 · <b style="color:#c9d1d9;">国际服百业 — 镜花阙</b></p>
+</div>
+
+<script>
+let curBase='B';
+const NAMES={A:'A 矢量重绘',B:'B 照片去点+叠加',C:'C 照片原图'};
+const STORE_KEY='guildwar-planner';
+const COLORS={we:{atk:'#1f6feb',def:'#2ea043'}, foe:{atk:'#f85149',def:'#f0883e'}};
+const svg=document.getElementById('board'), layer=document.getElementById('tokens');
+let uid=0; function nid(){return 'p'+(uid++);}
+function defaultPieces(){
+  const P=[]; const add=(side,role,str,x,y)=>P.push({id:nid(),side,role,str,x,y});
+  [[430,445],[400,550],[478,558],[430,660]].forEach(c=>add('we','atk',5,c[0],c[1]));
+  [[270,470],[270,555],[270,640]].forEach(c=>add('we','def',3,c[0],c[1]));
+  [[1020,445],[972,550],[1050,558],[1020,660]].forEach(c=>add('foe','atk',5,c[0],c[1]));
+  [[1180,470],[1180,555],[1180,640]].forEach(c=>add('foe','def',3,c[0],c[1]));
+  return P;
+}
+function load(){try{return JSON.parse(localStorage.getItem(STORE_KEY));}catch(e){return null;}}
+function save(){localStorage.setItem(STORE_KEY,JSON.stringify({base:curBase,pieces}));}
+const saved=load();
+let pieces=(saved&&Array.isArray(saved.pieces)&&saved.pieces.length)?saved.pieces:defaultPieces();
+if(saved&&saved.base) curBase=saved.base;
+pieces.forEach(p=>{const n=parseInt(String(p.id).replace('p',''),10); if(!isNaN(n)&&n>=uid) uid=n+1;});
+function rOf(str){return Math.max(16,Math.min(46,Math.round(15+(+str||0)*1.25)));}
+function setStatus(m){document.getElementById('status').textContent=m;}
+function pieceById(id){return pieces.find(p=>p.id===id);}
+function updateTotals(){
+  const s=side=>pieces.filter(p=>p.side===side).reduce((a,p)=>a+(+p.str||0),0);
+  const we=document.getElementById('totWe'), foe=document.getElementById('totFoe');
+  if(we) we.textContent=s('we'); if(foe) foe.textContent=s('foe');
+}
+function render(){
+  layer.innerHTML='';
+  pieces.forEach(p=>{
+    const r=rOf(p.str), fill=(COLORS[p.side]||COLORS.we)[p.role]||'#888';
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','tok'); g.setAttribute('transform',`translate(${p.x},${p.y})`); g.dataset.id=p.id;
+    const sh=p.role==='atk'
+      ?`<circle r="${r}" fill="${fill}" stroke="#fff" stroke-width="3"/>`
+      :`<rect x="${-r}" y="${-r}" width="${2*r}" height="${2*r}" rx="6" fill="${fill}" stroke="#fff" stroke-width="3"/>`;
+    const label=(p.role==='atk'?'攻':'守')+p.str;
+    g.innerHTML=sh+`<text text-anchor="middle" dy="${Math.round(r*0.34)}" fill="#fff" font-size="${Math.round(r*0.72)}" font-weight="800" pointer-events="none">${label}</text>`;
+    layer.appendChild(g);
+  });
+  updateTotals();
+}
+function setBase(b){
+  curBase=b;
+  ['A','B','C'].forEach(x=>{const el=document.getElementById('base'+x); if(el) el.style.display=(x===b)?'':'none';});
+  const lp=document.getElementById('labelsPhoto'); if(lp) lp.style.display=(b==='A')?'none':'';
+  document.querySelectorAll('.basebtn').forEach(x=>x.classList.toggle('active',x.dataset.b===b));
+  save(); setStatus('当前底图：'+NAMES[b]);
+}
+let dragging=null,dp=null,offset={x:0,y:0},downXY=null,moved=false;
+function svgPoint(e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());}
+svg.addEventListener('pointerdown',e=>{const g=e.target.closest('.tok');if(!g)return;layer.appendChild(g);dragging=g;dp=pieceById(g.dataset.id);const l=svgPoint(e);const tr=g.getAttribute('transform').match(/translate\(([-\d.]+),([-\d.]+)\)/);offset.x=l.x-parseFloat(tr[1]);offset.y=l.y-parseFloat(tr[2]);downXY={x:e.clientX,y:e.clientY};moved=false;g.setPointerCapture(e.pointerId);});
+svg.addEventListener('pointermove',e=>{if(!dragging)return;if(downXY&&Math.hypot(e.clientX-downXY.x,e.clientY-downXY.y)>6)moved=true;const l=svgPoint(e);dragging.setAttribute('transform',`translate(${Math.round(l.x-offset.x)},${Math.round(l.y-offset.y)})`);});
+svg.addEventListener('pointerup',e=>{
+  if(!dragging)return;
+  if(moved){const tr=dragging.getAttribute('transform').match(/translate\(([-\d.]+),([-\d.]+)\)/);if(dp){dp.x=parseFloat(tr[1]);dp.y=parseFloat(tr[2]);}save();setStatus('已保存');}
+  else{editStrength(dp);}
+  dragging=null;dp=null;
+});
+function editStrength(p){
+  if(!p)return;
+  const v=prompt('该队人数 / 强度（0 或留空 = 移除该队）：', p.str);
+  if(v===null)return;
+  const n=parseInt(v,10);
+  if(!n||n<=0){ pieces=pieces.filter(x=>x.id!==p.id); setStatus('已移除一支队伍'); }
+  else { p.str=n; setStatus('已设为 '+n+' 人'); }
+  save(); render();
+}
+function addPiece(side,role){
+  const str=role==='atk'?5:3, homeX=side==='we'?340:1110;
+  const cnt=pieces.filter(p=>p.side===side).length;
+  pieces.push({id:nid(),side,role,str,x:homeX,y:430+(cnt%7)*42});
+  save(); render(); setStatus('已添加：'+(side==='we'?'我方':'敌方')+(role==='atk'?'进攻队':'防守队'));
+}
+function exportJSON(){const d={base:curBase,pieces};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='guildwar-layout.json';a.click();setStatus('已导出布局 JSON');}
+function importJSON(e){const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(Array.isArray(d.pieces)){pieces=d.pieces;uid=0;pieces.forEach(p=>{const n=parseInt(String(p.id).replace('p',''),10);if(!isNaN(n)&&n>=uid)uid=n+1;});}if(d.base)setBase(d.base);save();render();setStatus('已导入布局');}catch(err){setStatus('导入失败：JSON 格式错误');}};fr.readAsText(f);e.target.value='';}
+// Build a fully self-contained SVG string of the current base + pieces.
+// Every <image> is embedded as a data: URI (already inline in the standalone;
+// fetched+inlined when running on the companion server). Throws if a base image
+// cannot be embedded, so we never silently emit a broken image-less file.
+async function buildSVGString(){
+  const clone=svg.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  clone.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');
+  ['A','B','C'].forEach(b=>{ if(b!==curBase){const el=clone.querySelector('#base'+b); if(el) el.remove();} });
+  if(curBase==='A'){ const lp=clone.querySelector('#labelsPhoto'); if(lp) lp.remove(); }
+  const imgs=[...clone.querySelectorAll('image')];
+  for(const img of imgs){
+    let href=img.getAttribute('href')||img.getAttribute('xlink:href')||'';
+    if(!href.startsWith('data:')){
+      let resp; try{ resp=await fetch(href); }catch(e){ resp=null; }
+      if(!resp||!resp.ok) throw new Error('底图读取失败，无法内嵌（'+href+'）');
+      const blob=await resp.blob();
+      href=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob);});
+    }
+    img.setAttribute('href',href); img.setAttribute('xlink:href',href);   // set both for viewer compatibility
+  }
+  return new XMLSerializer().serializeToString(clone);
+}
+async function downloadSVG(){
+  setStatus('正在导出 SVG…');
+  try{
+    const data=await buildSVGString();
+    const out=new Blob([data],{type:'image/svg+xml'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(out); a.download='guildwar-plan-'+curBase+'.svg'; a.click();
+    setStatus('已下载 SVG（含底图，约 '+Math.round(data.length/1024)+' KB）');
+  }catch(e){ setStatus('SVG 导出失败：'+e.message); alert('SVG 导出失败：'+e.message); }
+}
+async function downloadPNG(){
+  setStatus('正在导出 PNG…');
+  try{
+    const data=await buildSVGString();
+    const vb=svg.viewBox.baseVal, scale=1.5;
+    const w=Math.round((vb.width||1450)*scale), h=Math.round((vb.height||1150)*scale);
+    const url=URL.createObjectURL(new Blob([data],{type:'image/svg+xml;charset=utf-8'}));
+    const im=new Image();
+    await new Promise((res,rej)=>{im.onload=res;im.onerror=()=>rej(new Error('渲染失败'));im.src=url;});
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    const ctx=cv.getContext('2d'); ctx.fillStyle='#1b2027'; ctx.fillRect(0,0,w,h); ctx.drawImage(im,0,0,w,h);
+    URL.revokeObjectURL(url);
+    cv.toBlob(b=>{ if(!b){setStatus('PNG 导出失败');return;} const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='guildwar-plan-'+curBase+'.png'; a.click(); setStatus('已下载 PNG'); },'image/png');
+  }catch(e){ setStatus('PNG 导出失败：'+e.message); alert('PNG 导出失败：'+e.message); }
+}
+function resetLayout(){pieces=defaultPieces();save();render();setStatus('已复位为默认阵容（攻5/守3）');}
+render(); setBase(curBase);
+</script>
+</body>
+</html>
