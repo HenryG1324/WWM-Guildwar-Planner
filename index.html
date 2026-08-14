@@ -154,10 +154,15 @@
     <button onclick="addPiece('we','def')">＋我方守</button>
     <button onclick="addPiece('foe','atk')">＋敌方攻</button>
     <button onclick="addPiece('foe','def')">＋敌方守</button>
+    <span class="sep"></span>
+    <span style="color:#8b949e;font-size:12px;">标记：</span>
+    <button onclick="addDestroyedMarker()">✕ 摧毁标记</button>
+    <button onclick="addTree('we')">＋我方树</button>
+    <button onclick="addTree('foe')">＋敌方树</button>
   </div>
   <p class="hint">
-    <b>拖动</b>棋子摆位 · <b>单击</b>棋子改人数（0 = 移除）· 「加队」按钮增援 · 不上场/阵亡拖到「弃置区」。<br/>
-    棋子大小随人数变化；数字=该队人数。圆=进攻队 · 方=防守队；蓝绿=我方 · 红橙=敌方；默认 攻5 / 守3。
+    <b>拖动</b>棋子或标记摆位 · <b>单击</b>队伍改人数（0 = 移除）· <b>单击</b>摧毁/树标记可移除 · 不上场/阵亡拖到「弃置区」。<br/>
+    棋子大小随人数变化；数字=该队人数。圆=进攻队 · 方=防守队；蓝绿=我方 · 红橙=敌方；默认 攻5 / 守3。红叉=已摧毁；蓝树=我方树；红树=敌方树。
   </p>
   <p class="hint">
     <b>底图三选一</b>（用上方「底图」按钮切换，仅影响背景不影响棋子）：<br/>
@@ -179,7 +184,7 @@ const COLORS={we:{atk:'#1f6feb',def:'#2ea043'}, foe:{atk:'#f85149',def:'#f0883e'
 const svg=document.getElementById('board'), layer=document.getElementById('tokens');
 let uid=0; function nid(){return 'p'+(uid++);}
 function defaultPieces(){
-  const P=[]; const add=(side,role,str,x,y)=>P.push({id:nid(),side,role,str,x,y});
+  const P=[]; const add=(side,role,str,x,y)=>P.push({id:nid(),kind:'squad',side,role,str,x,y});
   [[430,445],[400,550],[478,558],[430,660]].forEach(c=>add('we','atk',5,c[0],c[1]));
   [[270,470],[270,555],[270,640]].forEach(c=>add('we','def',3,c[0],c[1]));
   [[1020,445],[972,550],[1050,558],[1020,660]].forEach(c=>add('foe','atk',5,c[0],c[1]));
@@ -196,21 +201,42 @@ function rOf(str){return Math.max(16,Math.min(46,Math.round(15+(+str||0)*1.25)))
 function setStatus(m){document.getElementById('status').textContent=m;}
 function pieceById(id){return pieces.find(p=>p.id===id);}
 function updateTotals(){
-  const s=side=>pieces.filter(p=>p.side===side).reduce((a,p)=>a+(+p.str||0),0);
+  const s=side=>pieces.filter(p=>(p.kind||'squad')==='squad'&&p.side===side).reduce((a,p)=>a+(+p.str||0),0);
   const we=document.getElementById('totWe'), foe=document.getElementById('totFoe');
   if(we) we.textContent=s('we'); if(foe) foe.textContent=s('foe');
 }
 function render(){
   layer.innerHTML='';
   pieces.forEach(p=>{
-    const r=rOf(p.str), fill=(COLORS[p.side]||COLORS.we)[p.role]||'#888';
+    const kind=p.kind||'squad';
     const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.setAttribute('class','tok'); g.setAttribute('transform',`translate(${p.x},${p.y})`); g.dataset.id=p.id;
-    const sh=p.role==='atk'
-      ?`<circle r="${r}" fill="${fill}" stroke="#fff" stroke-width="3"/>`
-      :`<rect x="${-r}" y="${-r}" width="${2*r}" height="${2*r}" rx="6" fill="${fill}" stroke="#fff" stroke-width="3"/>`;
-    const label=(p.role==='atk'?'攻':'守')+p.str;
-    g.innerHTML=sh+`<text text-anchor="middle" dy="${Math.round(r*0.34)}" fill="#fff" font-size="${Math.round(r*0.72)}" font-weight="800" pointer-events="none">${label}</text>`;
+    g.setAttribute('class','tok'); g.setAttribute('transform',`translate(${p.x},${p.y})`); g.dataset.id=p.id; g.dataset.kind=kind;
+    if(kind==='destroyed'){
+      g.innerHTML=`<title>摧毁标记（单击移除）</title><g transform="scale(.5)">
+        <line x1="-29" y1="-29" x2="29" y2="29" stroke="#0d1117" stroke-width="18" stroke-linecap="round"/>
+        <line x1="29" y1="-29" x2="-29" y2="29" stroke="#0d1117" stroke-width="18" stroke-linecap="round"/>
+        <line x1="-29" y1="-29" x2="29" y2="29" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
+        <line x1="29" y1="-29" x2="-29" y2="29" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
+        <line x1="-29" y1="-29" x2="29" y2="29" stroke="#f85149" stroke-width="8" stroke-linecap="round"/>
+        <line x1="29" y1="-29" x2="-29" y2="29" stroke="#f85149" stroke-width="8" stroke-linecap="round"/>
+      </g>`;
+    }else if(kind==='tree'){
+      const friendly=p.side==='we', fill=friendly?'#1f6feb':'#f85149', label=friendly?'我方树':'敌方树';
+      g.innerHTML=`<title>${label}（单击移除）</title><g transform="scale(.5)">
+        <rect x="-9" y="7" width="18" height="45" rx="6" fill="#8b5a2b" stroke="#fff" stroke-width="4"/>
+        <circle cx="0" cy="-22" r="31" fill="${fill}" stroke="#fff" stroke-width="4"/>
+        <circle cx="-23" cy="0" r="25" fill="${fill}" stroke="#fff" stroke-width="4"/>
+        <circle cx="23" cy="0" r="25" fill="${fill}" stroke="#fff" stroke-width="4"/>
+        <circle cx="0" cy="4" r="28" fill="${fill}" stroke="#fff" stroke-width="4"/>
+      </g>`;
+    }else{
+      const r=rOf(p.str), fill=(COLORS[p.side]||COLORS.we)[p.role]||'#888';
+      const sh=p.role==='atk'
+        ?`<circle r="${r}" fill="${fill}" stroke="#fff" stroke-width="3"/>`
+        :`<rect x="${-r}" y="${-r}" width="${2*r}" height="${2*r}" rx="6" fill="${fill}" stroke="#fff" stroke-width="3"/>`;
+      const label=(p.role==='atk'?'攻':'守')+p.str;
+      g.innerHTML=sh+`<text text-anchor="middle" dy="${Math.round(r*0.34)}" fill="#fff" font-size="${Math.round(r*0.72)}" font-weight="800" pointer-events="none">${label}</text>`;
+    }
     layer.appendChild(g);
   });
   updateTotals();
@@ -229,7 +255,7 @@ svg.addEventListener('pointermove',e=>{if(!dragging)return;if(downXY&&Math.hypot
 svg.addEventListener('pointerup',e=>{
   if(!dragging)return;
   if(moved){const tr=dragging.getAttribute('transform').match(/translate\(([-\d.]+),([-\d.]+)\)/);if(dp){dp.x=parseFloat(tr[1]);dp.y=parseFloat(tr[2]);}save();setStatus('已保存');}
-  else{editStrength(dp);}
+  else{editToken(dp);}
   dragging=null;dp=null;
 });
 function editStrength(p){
@@ -241,11 +267,31 @@ function editStrength(p){
   else { p.str=n; setStatus('已设为 '+n+' 人'); }
   save(); render();
 }
+function editToken(p){
+  if(!p)return;
+  const kind=p.kind||'squad';
+  if(kind==='squad'){editStrength(p);return;}
+  const label=kind==='destroyed'?'摧毁标记':(p.side==='we'?'我方树':'敌方树');
+  if(confirm('移除'+label+'？')){
+    pieces=pieces.filter(x=>x.id!==p.id);
+    save(); render(); setStatus('已移除：'+label);
+  }
+}
 function addPiece(side,role){
   const str=role==='atk'?5:3, homeX=side==='we'?340:1110;
-  const cnt=pieces.filter(p=>p.side===side).length;
-  pieces.push({id:nid(),side,role,str,x:homeX,y:430+(cnt%7)*42});
+  const cnt=pieces.filter(p=>(p.kind||'squad')==='squad'&&p.side===side).length;
+  pieces.push({id:nid(),kind:'squad',side,role,str,x:homeX,y:430+(cnt%7)*42});
   save(); render(); setStatus('已添加：'+(side==='we'?'我方':'敌方')+(role==='atk'?'进攻队':'防守队'));
+}
+function addDestroyedMarker(){
+  const n=pieces.filter(p=>p.kind==='destroyed').length;
+  pieces.push({id:nid(),kind:'destroyed',x:665+(n%4)*42,y:515+(Math.floor(n/4)%3)*48});
+  save(); render(); setStatus('已添加摧毁标记：拖到被摧毁的塔或雁上');
+}
+function addTree(side){
+  const n=pieces.filter(p=>p.kind==='tree'&&p.side===side).length;
+  pieces.push({id:nid(),kind:'tree',side,x:side==='we'?245:1205,y:720+(n%3)*82});
+  save(); render(); setStatus('已添加：'+(side==='we'?'我方树':'敌方树'));
 }
 function exportJSON(){const d={base:curBase,pieces};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='guildwar-layout.json';a.click();setStatus('已导出布局 JSON');}
 function importJSON(e){const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(Array.isArray(d.pieces)){pieces=d.pieces;uid=0;pieces.forEach(p=>{const n=parseInt(String(p.id).replace('p',''),10);if(!isNaN(n)&&n>=uid)uid=n+1;});}if(d.base)setBase(d.base);save();render();setStatus('已导入布局');}catch(err){setStatus('导入失败：JSON 格式错误');}};fr.readAsText(f);e.target.value='';}
