@@ -20,12 +20,11 @@ All paths below are relative to the project root and work on Windows, macOS, and
 
 | Path | Role |
 |---|---|
-| `index.html` | **GitHub Pages entry point** — generated alongside the standalone planner and served at the repository site's root URL. |
-| `guildwar-planner.html` | **Release artifact** — standalone, offline, self-contained (~2.4 MB, images inlined as base64). This is what ships. |
+| `index.html` | **Generated product** — GitHub Pages entry point and standalone, offline, self-contained planner (~2.4 MB, images inlined as base64). |
 | `src/planner.template.html` | **Dev source of truth.** Same app but images referenced with portable relative URLs such as `assets/mapB3.png`. It can be opened directly from `src/` on any supported desktop OS. Edit HERE, then run `build.py`. |
 | `src/assets/{map-clean,mapB3,tower-blue-v4}.png` | The three inlined images (C base, B base, restored tower sprite). |
 | `src/assets/mapLayout@2x.png` | 2× resample of the original screenshot; source for `make_assets.py`. |
-| `build.py` | Inlines `src/assets/*` into `src/planner.template.html` → writes both `index.html` and `guildwar-planner.html`. **Run after every template edit.** stdlib only. |
+| `build.py` | Inlines `src/assets/*` into `src/planner.template.html` → writes `index.html`. **Run after every template edit.** stdlib only. |
 | `scripts/make_assets.py` | Regenerates the 3 processed PNGs from `mapLayout@2x.png` (only if the map itself changes). Needs numpy + Pillow. |
 | `百业战-机制文档.md` | Game-mechanics reference (verified from a bilibili tutorial + a CN mechanics doc). The basis for the strategy layer. |
 | `README.md` | User/guild-facing (Chinese). |
@@ -35,10 +34,10 @@ All paths below are relative to the project root and work on Windows, macOS, and
 
 **Preferred workflow:**
 1. Edit `src/planner.template.html` (do NOT hand-edit the base64 blobs in the standalone).
-2. Rebuild both release artifacts (`index.html` and `guildwar-planner.html`):
+2. Rebuild the release artifact (`index.html`):
    - Windows PowerShell: `python .\build.py` (or `py .\build.py` if the Python launcher is installed)
    - macOS/Linux: `python3 ./build.py`
-3. Double-click `guildwar-planner.html` and test it from a `file://` URL. It is fully offline.
+3. Double-click `index.html` and test it from a `file://` URL. It is fully offline.
 
 **Optional local HTTP preview:** the template now uses relative asset URLs, so no companion server
 or OS-specific path setup is required. From the project root, run one of the following and open

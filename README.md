@@ -10,7 +10,7 @@ battlefield, then export the plan as an image to share.
 
 ## Quick start
 
-**Double-click `guildwar-planner.html`** to open it in any browser. No internet, no install, no
+**Double-click `index.html`** to open it in any browser. No internet, no install, no
 server required — it's fully self-contained.
 
 ## GitHub Pages website
@@ -21,7 +21,7 @@ This repository is ready to publish as a GitHub Pages project site:
 
 After pushing the project to GitHub, open **Settings → Pages**, choose **Deploy from a branch**,
 then select **`main`** and **`/(root)`**. GitHub Pages serves the generated `index.html` at the URL
-above. The repository-name prefix is safe: the release files contain no root-relative asset paths
+above. The repository-name prefix is safe: the generated file contains no root-relative asset paths
 or external runtime dependencies.
 
 ## Features
@@ -52,7 +52,7 @@ or external runtime dependencies.
 
 ## Distributing it
 
-- **Simplest**: send `guildwar-planner.html` directly — recipients just double-click it.
+- **Simplest**: send `index.html` directly — recipients just double-click it.
 - **A link**: host that one file on any static host.
 - **Just an image**: use "Download SVG".
 
@@ -60,8 +60,7 @@ or external runtime dependencies.
 
 | File | Purpose |
 |---|---|
-| `index.html` | GitHub Pages entry point; generated from the same source as the standalone planner |
-| `guildwar-planner.html` | **The product** — the single-file planner (this is what you share) |
+| `index.html` | **The product** — GitHub Pages entry point and standalone single-file planner |
 | `百业战-机制文档.md` | Guild-war mechanics reference (objectives, economy, commander skills, timeline) |
 | `README.md` | This file |
 | `HANDOFF.md` | Handoff for developers / AI sessions who want to modify the tool |
@@ -91,7 +90,7 @@ python3 ./build.py
 
 **百业战战术板**：单文件、离线可用的网页工具，在真实百业战地图上摆「棋子」推演 30v30 攻防，并一键导出图片发群。
 
-- **打开**：直接双击 `guildwar-planner.html`，任意浏览器即可，无需联网 / 安装 / 服务器。
+- **打开**：直接双击 `index.html`，任意浏览器即可，无需联网 / 安装 / 服务器。
 - **底图三选一**（右下「底图」按钮）：A 矢量重绘（最干净）· B 照片去点+标注（**推荐**）· C 原始照片。
 - **棋子 = 队伍**：圆=进攻、方=防守；蓝绿=我方、红橙=敌方。数字=该队人数（默认 攻5/守3）。
   - **单击棋子**改人数（`0` 或留空 = 移除）；棋子**大小随人数变化**。
@@ -102,4 +101,3 @@ python3 ./build.py
 - **分享**：直接发这个 html 文件即可；或托管发链接（国内建议 阿里云 OSS / Gitee Pages）。
 
 > 制作 · **国际服百业 — 镜花阙**
->>>>>>> 3b15b6e (Initial version commit. V1 complete)

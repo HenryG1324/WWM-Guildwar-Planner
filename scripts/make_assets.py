@@ -21,6 +21,16 @@ from PIL import Image
 A = pathlib.Path(__file__).parent.parent / "src" / "assets"
 im = Image.open(A / "mapLayout@2x.png").convert("RGB").crop((0, 0, 1450, 1014))  # drop right legend panel
 
+# The original screenshot captured a white mouse pointer beside the blue
+# middle-lane tower. Remove it once at the shared-base stage so every derived
+# background is clean. Restore the flat lane segment from a clean column to
+# retain its original antialiasing exactly.
+cursor_cleanup = Image.open(A / "map-cursor-cleanup.png").convert("RGBA")
+im = Image.alpha_composite(im.convert("RGBA"), cursor_cleanup).convert("RGB")
+im_arr = np.array(im)
+im_arr[545:573, 568:612, :] = im_arr[545:573, 620:621, :]
+im = Image.fromarray(im_arr)
+
 # ---- C base: cropped original ----
 im.save(A / "map-clean.png")
 
@@ -56,7 +66,21 @@ for _ in range(90):
     nw = (~known) & (c > 0); idx = np.where(nw)
     img[idx[0], idx[1], :] = s[idx[0], idx[1], :] / c[idx[0], idx[1], None]
     known = known | nw
-Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)).save(A / "mapB3.png")
+
+result = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+
+# The original markers overlap textured map geometry and, in two places, route
+# lines. A feathered transparent overlay is more faithful than expanding the
+# color-based diffusion mask. Only compact marker regions have nonzero alpha.
+cleanup = Image.open(A / "mapB3-marker-cleanup.png").convert("RGBA")
+result = Image.alpha_composite(result.convert("RGBA"), cleanup).convert("RGB")
+result_arr = np.array(result)
+
+# Repaint the two affected flat route segments from clean columns so their
+# original colors and antialiasing remain exact.
+result_arr[353:370, 510:580, :] = arr[353:370, 590:591, :]
+result_arr[545:573, 766:837, :] = arr[545:573, 750:751, :]
+Image.fromarray(result_arr).save(A / "mapB3.png")
 
 # ---- tower sprite: cut the mid-lane blue tower figure, key out grey bg + green line ----
 box = (532, 522, 562, 569)  # true figure bounds incl. base (measured x534-561, y524-567)
